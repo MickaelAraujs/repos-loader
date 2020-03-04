@@ -20,7 +20,7 @@ function handleSubmit(event) {
 }
 
 function main() {
-    divElement.innerHTML = '';
+    clearDiv(divElement);
     
     username = inputElement.value;
     inputElement.value = '';
@@ -30,16 +30,32 @@ function main() {
     getRepoList(username, pageInfo.total);
 }
 
-function getRepoList(username,page) {
+function setTotalPages(username) {
+    axios.get(`${baseURL}${username}`)
+         .then(response => {
+             const { public_repos } = response.data;
+             pageInfo.total = totalPages(public_repos);
+         })
+         .catch(() => console.warn('Ocorreu algum erro inexperado, atualize a página e tente novamente...'));
+}
+
+function setLoading() {
+    const loadingElement = document.createElement('p');
+    const loadingText = document.createTextNode('carregando lista de repositórios ...');
+
+    loadingElement.appendChild(loadingText);
+    document.querySelector('.loader').appendChild(loadingElement);
+}
+
+function getRepoList(username, page) {
     axios.get(`${baseURL}${username}${reposPath}?page=${page}`)
          .then(response => loadRepos(response.data))
          .catch(() => handleError());
 }
 
 function loadRepos(repos) {
-    unsetLoading();
-    
-    divElement.innerHTML = '';
+    clearDiv(document.querySelector('.loader'));
+    clearDiv(divElement);
     
     loadPageButtons();
     
@@ -56,20 +72,8 @@ function loadRepos(repos) {
     divElement.appendChild(ulElement);
 }
 
-function setLoading() {
-    const loadingElement = document.createElement('p');
-    const loadingText = document.createTextNode('carregando lista de repositórios ...');
-
-    loadingElement.appendChild(loadingText);
-    document.querySelector('.loader').appendChild(loadingElement);
-}
-
-function unsetLoading() {
-    document.querySelector('.loader').innerHTML = '';
-}
-
 function handleError() {
-    unsetLoading();
+    clearDiv(document.querySelector('.loader'));
     
     const errorDiv = document.createElement('div');
     errorDiv.setAttribute('class','error-div');
@@ -86,38 +90,6 @@ function handleError() {
     errorDiv.appendChild(pElement);
 
     divElement.appendChild(errorDiv);
-}
-
-function setTotalPages(username) {
-    axios.get(`${baseURL}${username}`)
-         .then(response => {
-             const { public_repos } = response.data;
-             pageInfo.total = totalPages(public_repos);
-         })
-}
-
-function totalPages(numberOfRepos) {
-    return Math.ceil(numberOfRepos / 30);
-}
-
-function prevPage() {
-    if (pageInfo.page === 1) {
-        addClassToElement(document.querySelector('.button-container #prev'));
-        return;
-    }
-
-    pageInfo.page = pageInfo.page - 1;
-    getRepoList(username,pageInfo.page);
-}
-
-function nextPage() {
-    if (pageInfo.page === pageInfo.total) {
-        addClassToElement(document.querySelector('.button-container #next'));
-        return;
-    }
-
-    pageInfo.page = pageInfo.page + 1;
-    getRepoList(username,pageInfo.page);
 }
 
 function loadPageButtons() {
@@ -152,6 +124,38 @@ function loadPageButtons() {
     buttonContainer.appendChild(buttonNext);
 }
 
+function prevPage() {
+    if (pageInfo.page === 1) {
+        addClassToElement(document.querySelector('.button-container #prev'));
+        return;
+    }
+
+    pageInfo.page = pageInfo.page - 1;
+    getRepoList(username,pageInfo.page);
+}
+
+function nextPage() {
+    if (pageInfo.page === pageInfo.total) {
+        addClassToElement(document.querySelector('.button-container #next'));
+        return;
+    }
+
+    pageInfo.page = pageInfo.page + 1;
+    getRepoList(username,pageInfo.page);
+}
+
+// aux functions ...
+
+function clearDiv(div) {
+    div.innerHTML = '';
+}
+
+function totalPages(numberOfRepos) {
+    return Math.ceil(numberOfRepos / 30);
+}
+
 function addClassToElement(element) {
     element.classList.add('disabled');
 }
+
+
