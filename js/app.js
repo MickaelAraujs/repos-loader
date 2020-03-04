@@ -7,6 +7,11 @@ const reposPath = `/repos`;
 
 let username = '';
 
+const pageInfo = {
+    page: 1,
+    total: 1
+};
+
 buttonElement.onclick = handleSubmit;
 
 function handleSubmit(event) {
@@ -16,21 +21,27 @@ function handleSubmit(event) {
 
 function main() {
     divElement.innerHTML = '';
+    
     username = inputElement.value;
     inputElement.value = '';
     
+    setTotalPages(username);
     setLoading();
-    getRepoList(username);
+    getRepoList(username, pageInfo.total);
 }
 
-function getRepoList(username) {
-    axios.get(`${baseURL}${username}${reposPath}`)
+function getRepoList(username,page) {
+    axios.get(`${baseURL}${username}${reposPath}?page=${page}`)
          .then(response => loadRepos(response.data))
          .catch(() => handleError());
 }
 
 function loadRepos(repos) {
     unsetLoading();
+    
+    divElement.innerHTML = '';
+    
+    loadPageButtons();
     
     const ulElement = document.createElement('ul');
     
@@ -75,4 +86,72 @@ function handleError() {
     errorDiv.appendChild(pElement);
 
     divElement.appendChild(errorDiv);
+}
+
+function setTotalPages(username) {
+    axios.get(`${baseURL}${username}`)
+         .then(response => {
+             const { public_repos } = response.data;
+             pageInfo.total = totalPages(public_repos);
+         })
+}
+
+function totalPages(numberOfRepos) {
+    return Math.ceil(numberOfRepos / 30);
+}
+
+function prevPage() {
+    if (pageInfo.page === 1) {
+        addClassToElement(document.querySelector('.button-container #prev'));
+        return;
+    }
+
+    pageInfo.page = pageInfo.page - 1;
+    getRepoList(username,pageInfo.page);
+}
+
+function nextPage() {
+    if (pageInfo.page === pageInfo.total) {
+        addClassToElement(document.querySelector('.button-container #next'));
+        return;
+    }
+
+    pageInfo.page = pageInfo.page + 1;
+    getRepoList(username,pageInfo.page);
+}
+
+function loadPageButtons() {
+    const buttonContainer = document.createElement('div');
+    buttonContainer.setAttribute('class','button-container');
+    divElement.appendChild(buttonContainer);
+
+    const buttonPrev = document.createElement('button');
+    const prevText = document.createTextNode('Anterior');
+    buttonPrev.appendChild(prevText);
+    buttonPrev.setAttribute('onclick','prevPage()');
+    buttonPrev.setAttribute('class','page-button');
+    buttonPrev.setAttribute('id','prev');
+    
+    const buttonNext = document.createElement('button');
+    const nextText = document.createTextNode('Próxima');
+    buttonNext.appendChild(nextText);
+    buttonNext.setAttribute('onclick','nextPage()');
+    buttonNext.setAttribute('class','page-button');
+    buttonNext.setAttribute('id','next');
+
+    if (pageInfo.total === 1) {
+        addClassToElement(buttonPrev);
+        addClassToElement(buttonNext);
+    } else if (pageInfo.page === 1) {
+        addClassToElement(buttonPrev);
+    } else if (pageInfo.page === pageInfo.total) {
+        addClassToElement(buttonNext);
+    }
+
+    buttonContainer.appendChild(buttonPrev);
+    buttonContainer.appendChild(buttonNext);
+}
+
+function addClassToElement(element) {
+    element.classList.add('disabled');
 }

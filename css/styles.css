@@ -47,7 +47,7 @@ label {
 
 ul {
     list-style: none;
-    margin: 75px 0;
+    margin: 25px 0;
     background: #fff;
     border-radius: 5px;
     padding: 10px 0;
@@ -71,4 +71,26 @@ li {
     text-align: center;
     margin: 250px 0;
     font-weight: bold;
+}
+
+.page-button {
+    width: 120px;
+    border: 0;
+    background-color: #FFFFFF;
+    color: #4A69FF;
+    padding: 15px;
+    font-family: sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.list .button-container {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 25px 0;
+}
+
+.disabled {
+    opacity: 0.7;
 }
